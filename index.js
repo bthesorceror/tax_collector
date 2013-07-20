@@ -9,11 +9,15 @@ TaxCollector.prototype.collect = function(stream) {
   var data = "",
       self = this;
 
+  var finished = false;
+
   var closed = function(d) {
+    if (finished) return;
     if (d) {
       data += d;
     }
     self.emit('ready', data);
+    finished = true
   }
 
   stream.setEncoding(this.encoding);
