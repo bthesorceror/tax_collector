@@ -20,6 +20,11 @@ TaxCollector.prototype.collect = function(stream) {
     finished = true
   }
 
+  var error = function(err) {
+    self.emit('failed', err, data);
+    finished = true;
+  }
+
   stream.setEncoding(this.encoding);
 
   stream.on('data', function(d) {
@@ -28,6 +33,7 @@ TaxCollector.prototype.collect = function(stream) {
 
   stream.on('end', closed);
   stream.on('close', closed);
+  stream.on('error', error);
 }
 
 module.exports = TaxCollector;
