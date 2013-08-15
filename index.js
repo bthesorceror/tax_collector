@@ -1,39 +1,31 @@
-function TaxCollector(options) {
+function TaxCollector(stream, options) {
   options = options || {};
+  this.isFinished = false;
   this.encoding = options['encoding'] || 'utf8';
+  this.setupStreamEvents(stream);
+  this.data = "";
 }
 
 (require('util')).inherits(TaxCollector, (require('events').EventEmitter));
 
-TaxCollector.prototype.collect = function(stream) {
-  var data = "",
-      self = this;
-
-  var finished = false;
-
-  var closed = function(d) {
-    if (finished) return;
-    if (d) {
-      data += d;
-    }
-    self.emit('ready', data);
-    finished = true
-  }
-
-  var error = function(err) {
-    self.emit('failed', err, data);
-    finished = true;
-  }
-
+TaxCollector.prototype.setupStreamEvents = function(stream) {
   stream.setEncoding(this.encoding);
+  stream.on('data', this.onData.bind(this));
+  stream.on('end', this.finished.bind(this));
+  stream.on('close', this.finished.bind(this));
+}
 
-  stream.on('data', function(d) {
-    data += d;
-  });
+TaxCollector.prototype.onData = function(data) {
+  this.data += data;
+}
 
-  stream.on('end', closed);
-  stream.on('close', closed);
-  stream.on('error', error);
+TaxCollector.prototype.finished = function(data) {
+  if (this.isFinished) return;
+  data && this.onData(data);
+  process.nextTick(function() {
+    this.emit('ready', this.data);
+    this.isFinished = true
+  }.bind(this));
 }
 
 module.exports = TaxCollector;
