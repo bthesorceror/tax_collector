@@ -24,8 +24,8 @@ TaxCollector.prototype.finished = function(data) {
   data && this.onData(data);
   process.nextTick(function() {
     this.emit('ready', this.data);
-    this.isFinished = true
   }.bind(this));
+  this.isFinished = true
 }
 
 module.exports = TaxCollector;
