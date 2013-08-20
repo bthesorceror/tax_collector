@@ -13,10 +13,15 @@ TaxCollector.prototype.setupStreamEvents = function(stream) {
   stream.on('data', this.onData.bind(this));
   stream.on('end', this.finished.bind(this));
   stream.on('close', this.finished.bind(this));
+  stream.on('error', this.errored.bind(this));
 }
 
 TaxCollector.prototype.onData = function(data) {
   this.data += data;
+}
+
+TaxCollector.prototype.errored = function(error) {
+  this.emit('error', error);
 }
 
 TaxCollector.prototype.finished = function(data) {
