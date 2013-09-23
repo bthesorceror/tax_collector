@@ -1,6 +1,6 @@
 {
   "name": "tax_collector",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Collect the contents of a stream",
   "main": "index.js",
   "scripts": {
