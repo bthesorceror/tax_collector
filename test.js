@@ -14,57 +14,52 @@ function createReadable() {
 }
 
 (function() {
+
   tape("emits 'ready' event with data", function(test) {
-    var collector = new Collector(fs.createReadStream('./test.txt'));
+
+    var stream = fs.createReadStream('./test.txt');
+    var collector = new Collector();
+
+    stream.pipe(collector);
+
     test.plan(1);
 
     collector.on('ready', function(data) {
       test.equal(data, "I am the night\nI am Batman\n");
     });
+
   });
 
-  tape("emits 'error' on stream error", function(test) {
-    var readable = createReadable();
-    var collector = new Collector(readable);
+  tape("calls callback when done", function(test) {
 
     test.plan(1);
 
-    collector.on('error', function(error) {
-      test.equals(error, 'this is a fine error');
+    var stream = fs.createReadStream('./test.txt');
+    var collector = new Collector(function(data) {
+      test.equal(data, "I am the night\nI am Batman\n");
     });
 
-    readable.emit('error', 'this is a fine error');
+    stream.pipe(collector);
+
   });
 
-  tape("does not double emit 'ready' event", function(test) {
-    var readable = createReadable();
-    var collector = new Collector(readable);
+  tape("acts as a passthrough", function(test) {
 
-    test.plan(1);
+    var stream = fs.createReadStream('./test.txt');
+    var collector1 = new Collector();
+    var collector2 = new Collector();
 
-    collector.on('ready', function(error) {
-      test.ok(true);
+    stream.pipe(collector1).pipe(collector2);
+
+    test.plan(2);
+
+    collector1.on('ready', function(data) {
+      test.equal(data, "I am the night\nI am Batman\n");
     });
 
-    readable.emit('close');
-    readable.emit('end');
-  });
+    collector2.on('ready', function(data) {
+      test.equal(data, "I am the night\nI am Batman\n");
+    });
 
-  tape("sets the default encoding", function(test) {
-    var readable = createReadable();
-    var collector = new Collector(readable);
-
-    test.plan(1);
-
-    test.equal(readable._encoding, 'utf8');
-  });
-
-  tape("sets the custom encoding", function(test) {
-    var readable = createReadable();
-    var collector = new Collector(readable, { encoding: 'russian' });
-
-    test.plan(1);
-
-    test.equal(readable._encoding, 'russian');
   });
 })();

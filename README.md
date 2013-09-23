@@ -13,15 +13,11 @@ var TaxCollector = require('tax_collector');
 
 var stream = getSomeReadableStream();
 
-var collector = new TaxCollector(stream);
+var collector = new TaxCollector();
+
+stream.pipe(collector);
 
 collector.on('ready', function(text) {
   // Do something with text
 });
 ```
-
-## Notes
-
-- 'error' event from stream is delegated
-- encoding is set to utf8 by default, but options can be passed with an
-  'encoding' key

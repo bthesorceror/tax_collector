@@ -1,36 +1,39 @@
-function TaxCollector(stream, options) {
-  options = options || {};
-  this.isFinished = false;
-  this.encoding = options['encoding'] || 'utf8';
-  this.setupStreamEvents(stream);
+var Duplex = require('stream').Duplex;
+
+function TaxCollector(callback, options) {
+  if (typeof(callback) == 'function') {
+    this.callback = callback;
+  } else {
+    options = callback;
+  }
+  Duplex.call(this, options);
   this.data = "";
 }
 
-(require('util')).inherits(TaxCollector, (require('events').EventEmitter));
+(require('util')).inherits(TaxCollector, Duplex);
 
-TaxCollector.prototype.setupStreamEvents = function(stream) {
-  stream.setEncoding(this.encoding);
-  stream.on('data', this.onData.bind(this));
-  stream.on('end', this.finished.bind(this));
-  stream.on('close', this.finished.bind(this));
-  stream.on('error', this.errored.bind(this));
+TaxCollector.prototype._write = function(chunk, encoding, next) {
+  this.data += chunk;
+  this.push(chunk);
+  next();
 }
 
-TaxCollector.prototype.onData = function(data) {
-  this.data += data;
+TaxCollector.prototype._ready = function() {
+  this.emit('ready', this.data);
+  if (this.callback) {
+    this.callback(this.data);
+  }
 }
 
-TaxCollector.prototype.errored = function(error) {
-  this.emit('error', error);
-}
+TaxCollector.prototype._read = function() {}
 
-TaxCollector.prototype.finished = function(data) {
-  if (this.isFinished) return;
-  data && this.onData(data);
+TaxCollector.prototype.end = function(data) {
+  var self = this;
+  Duplex.prototype.end.apply(this, arguments);
   process.nextTick(function() {
-    this.emit('ready', this.data);
-  }.bind(this));
-  this.isFinished = true
+    self._ready();
+  });
+  this.push(data);
 }
 
 module.exports = TaxCollector;
